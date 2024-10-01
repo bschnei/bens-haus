@@ -1,0 +1,46 @@
+baseURL = "https://bens.haus"
+languageCode = "en-us"
+title = "bens.haus"
+theme = "hugo-simple"
+
+enableRobotsTXT = true
+capitalizeListTitles = false
+
+disableKinds = ["taxonomy"]
+[taxonomies]
+tag = "tags"
+
+[permalinks]
+blog = "/:slugorfilename/"
+tags = "/blog/:slug"
+
+[markup.goldmark.renderer]
+unsafe = true
+[markup.highlight]
+lineNos = true
+lineNumbersInTable = false
+style = "catppuccin-mocha"
+
+[params]
+title = "bens.haus"
+description = "bens.haus"
+favicon = "images/favicon.png"
+dateFormat = "2006-01-02"
+hideMadeWithLine = true
+hideRSSLink = true
+
+[[menu.main]]
+name = "Home"
+pageRef = "/"
+weight = 10
+[[menu.main]]
+name = "Larky"
+pageRef = "/larky"
+weight = 20
+
+[outputs]
+# Generate RSS for home only.
+section = ["html"]
+taxonomy = ["html"]
+term = ["html"]
+
