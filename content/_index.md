@@ -4,4 +4,6 @@ date = 2024-09-29T16:06:20-07:00
 draft = false
 +++
 
-Stuff is supposed to go here. For now there's only [Larky](larky/index.html).
+If you're looking for Larky :heart:, she's [here](larky/index.html).
+
+When I'm not sailing, I like to [build](router/index.html).

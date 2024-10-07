@@ -2,6 +2,7 @@ baseURL = "https://bens.haus"
 languageCode = "en-us"
 title = "bens.haus"
 theme = "hugo-simple"
+enableEmoji = true
 
 enableRobotsTXT = true
 capitalizeListTitles = false
@@ -37,6 +38,10 @@ weight = 10
 name = "Larky"
 pageRef = "/larky"
 weight = 20
+[[menu.main]]
+name = "DiY Router"
+pageRef = "/router"
+weight = 30
 
 [outputs]
 # Generate RSS for home only.

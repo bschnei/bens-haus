@@ -32,6 +32,6 @@ She will forever be a part of us. Maybe not her recklessly fearless approach to 
 
 [![Lark in Woods](PXL_20231012.jpg)](https://lark.bens.haus)
 
-If you are reading this, it almost certainly means you are someone very special to us. We want to thank everyone who has reached out to us even if it was simply to say "sorry". Your thoughts and love are what will get us through. It really does make a diference.
+If you are reading this, it almost certainly means you are someone very special to us. We want to thank everyone who has reached out to us even if it was simply to say "sorry". Your thoughts and love are what will get us through. It really does make a difference.
 
 [Click for a lot more photos! <3](https://lark.bens.haus)
