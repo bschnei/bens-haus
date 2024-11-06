@@ -6,10 +6,10 @@ draft = false
 
 ## Do-it-Yourself, Open Source ARM Gateway/Router
 
-This is an outline of steps I followed to get up-to-date, mainstream U-Boot and Linux running on an ARM SoC network appliance. After many years of using [dd-wrt](https://dd-wrt.com/) as a router OS, I was tired of the dated UI, cumbersome update process, and lack of kernel updates--which are important for good security. I also become increasingly comfortable with Linux system administration and thought it would be a fun project to try to build my own router.
+This is an outline of steps I followed to get up-to-date, mainstream U-Boot and Linux running on an ARM SoC network appliance. After many years of using [DD-WRT](https://dd-wrt.com/) as a router OS, I was tired of the dated GUI, cumbersome update process, and lack of kernel updates--which are important for good security. DD-WRT's shortcomings also forced me to get comfortable with Linux system administration. At a certain point, I thought it would be a fun project to try to build my own router.
 
 ### Acquire a [Globalscale ESPRESSOBIN Ultra](https://globalscaletechnologies.com/product/espressobin-ultra/)
-I believe this device was the result of a kickstarter project. The hardware (outside of the WiFi/Bluetooth module) seems fine, but the devices I received came running outdated and unmaintained forks of upstream open source projects (e.g. Linux and U-Boot). Their forks--having missed out on years of upstream development--are also very buggy.
+I believe this device was the result of a kickstarter project. The hardware (outside of the WiFi/Bluetooth module) seems fine, but the devices I received came running outdated and unmaintained forks of upstream open source projects (e.g. Linux and U-Boot). Globalscale's forks--lacking years of upstream development--are also very buggy.
 
 It has most of the features one would expect from a basic small-office/home-office router including a 4 port switch (useful for VLANs). It also has a WiFi/Bluetooth module, but it is not very good and requires the use of closed-source drivers. I recommend separate, dedicated WiFi access point hardware and avoiding using this device's WiFi.
 
@@ -19,7 +19,7 @@ If you do not have a device that runs Linux natively, you can also use a virtual
 ### Build bootloader from source and flash
 Instructions for this step can be found [here](https://github.com/bschnei/ebu-bootloader).
  
-Note that flashing the bootloader is not a requirement for a stable device, but the remaining steps and configurations were developed assuming the bootloader is up-to-date. In particular [U-Boot's Standard Boot](https://docs.u-boot.org/en/stable/develop/bootstd.html) isn't supported in older version of U-Boot. This means you'll have to live with some combination of painful/hacky kernel upgrades and complex U-Boot configuration. Your CPU's maximum speed will also be limited.
+Note that flashing the bootloader is not a requirement for a stable device, but the remaining steps and configurations were developed assuming the bootloader is up-to-date. In particular [U-Boot's Standard Boot](https://docs.u-boot.org/en/stable/develop/bootstd.html) isn't supported in older versions of U-Boot. This means you'll have to live with some combination of painful/hacky kernel upgrades and complex U-Boot configuration. Your CPU's maximum speed will also be limited.
 
 ### Configure U-Boot
 On this device, U-Boot stores it's configuration (environment variables) in dedicated storage completely separate from the bootloader (SPINOR), the eMMC, or any other block devices. This means that flashing the bootloader will not change the U-Boot environment variables.
@@ -66,7 +66,7 @@ LinkLocalAddressing=no
 
 These configuration files are typically meant to be created under `/etc/systemd/network`. After creating them, enable and start `systemd-networkd`. It can be very useful to look at the logs that are then produced to see if there are any obvious errors.
 
-Try to find your device on the LAN (nmap is useful for that), and ping it. If pings are failing, you have to troubleshoot networking (see the great guide on the [Arch Linux wiki](https://wiki.archlinux.org/title/Network_configuration).
+Try to find your device on the LAN (nmap is useful for that), and ping it. If pings are failing, you have to troubleshoot networking (see the great guide on the [Arch Linux wiki](https://wiki.archlinux.org/title/Network_configuration)).
 
 If you haven't already, install and configure SSH. While there are some applications (like pi-hole) that come with an optional GUI, all system management and maintenance will happen over SSH. Now is an excellent time to make sure it is working well (e.g. create and use SSH keys).
 
