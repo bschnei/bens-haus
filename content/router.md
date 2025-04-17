@@ -6,72 +6,43 @@ draft = false
 
 ## Do-it-Yourself, Open Source ARM Gateway/Router
 
-This is an outline of steps I followed to get up-to-date, mainstream U-Boot and
-Linux running on an ARM SoC network appliance (e.g. a hobbyist-level device
-like a [Raspberry Pi](https://www.raspberrypi.com/)). After many years of using
-[DD-WRT](https://dd-wrt.com/) as a router OS on a [Netgear Nighthawk
-R7000](https://www.netgear.com/home/wifi/routers/r7000/), I was very tired of
-the process of having to "flash" my router in order to update the kernel/OS.
+Many U.S. ISPs charge their customers $10-15 per month for a gateway/router device that most people just think of as "the wifi". In my experience, it's usually not made clear that it is optional to rent and use this device. That is, you typically have to return it if you terminate service or pay for it if you fail to do so. You'll find these terms if you are willing to wade through the fine print, of course.
 
-DD-WRT's kernel for the device when I stopped using it in 2024 was version 4.19
-which stopped receiving support from Linux in December 2024. Security
-vulnerabilities are discovered continuously in software. It follows that the
-ability to run a maintained kernel in the device separating the devices in your
-home/office from the rest of the internet is a desirable security feature of
-any operating system.
+The terms are deliberately buried because loaning someone a $100 device and charging them $10 a month is a *great* business. ISPs probably see a greater return from this rental business than they do investing in the infrastructure to provide you fast and reliable internet. Which would explain a lot.
 
-### Acquire a [Globalscale ESPRESSOBIN Ultra](https://globalscaletechnologies.com/product/espressobin-ultra/)
+But an even better business to be in the 2020s is selling your internet activity to advertisers. In the case of my ISP (Starlink) their device sends the address of every website I visit or app I use directly to Google. If you are a Starlink customer and use their hardware to provide WiFi for your home, Google knows about *every* request for an internet resource from all of the devices in your home.
 
-This line of devices is the result of a [kickstarter
-project](https://www.kickstarter.com/projects/874883570/marvell-espressobin-board).
-The hardware (outside of the WiFi/Bluetooth module) seems fine, but the devices
-I received came running outdated and unmaintained forks of upstream open source
-projects (e.g. Linux and U-Boot). Globalscale's forks--lacking years of
-upstream development--are also very buggy.
+That shouldn't come as a big surprise given [how Google operates](https://www.theverge.com/2023/10/27/23934961/google-antitrust-trial-defaults-search-deal-26-3-billion). But it is something I like to bring up whenever I find myself in a conversation with someone who swears their phone is listening to their conversations. "No no," I reassure them, "processing audio is costly. Why would they bother with that when they already know about every interaction all of your personal devices have with the internet?"
 
-It is your basic small-office/home-office router with some nice features like
-PoE via the WAN port, 4 port switch, and 4 LEDs. It also has a WiFi/Bluetooth
-module, but it is not very good and requires the use of closed-source drivers.
-I recommend separate, dedicated WiFi access point hardware and avoiding this
-device's WiFi.
+The good news is that you can build your own router and configure it so that it does not send the address of every website you visit to your ISP (or whichever advertising company they are in bed with).
 
-### Upgrade the bootloader
+For additional motivation/inspiration, I recommend reading [this entertaining and extensive guide](https://wiki.futo.org/wiki/Introduction_to_a_Self_Managed_Life:_a_13_hour_%26_28_minute_presentation_by_FUTO_software#Why_Build_Your_Own_Router?). It contains a more accessible guide to building your own router than what you will find here--which is mostly notes to remind myself what I did.
 
-Upgrading the bootloader is not a requirement for a stable device. However, the
-remainder of this guide will assume the bootloader supports [UEFI on
-U-Boot](https://docs.u-boot.org/en/latest/develop/uefi/uefi.html) and [
-Standard Boot](https://docs.u-boot.org/en/latest/develop/bootstd/index.html).
-The factory bootloader's support for UEFI is [broken for modern Linux
-kernels](https://lore.kernel.org/regressions/NpVfaMj--3-9@bens.haus/T/).
+What follows is an outline of steps to get up-to-date, mainstream U-Boot and Linux running on an ARM SoC network appliance (e.g. a hobbyist-level device like a [Raspberry Pi](https://www.raspberrypi.com/)). After many years of using [DD-WRT](https://dd-wrt.com/) as a router OS on a [Netgear Nighthawk R7000](https://www.netgear.com/home/wifi/routers/r7000/), I was very tired of the process of having to "flash" my router in order to update the kernel/OS.
 
-It is possible to use alternative boot processes (BIOS-style) and
-configurations, but you will have to rely on your distribution for support
-because they each configure U-Boot according to the unique way they package the
-kernel. UEFI specifies a standard location to find bootable images on special
-filesystem partitions. This should make it easier for Linux distributions to
-support the device because it won't require as much maintenance of
-device-specific packages/documentation which will see far less support relative
-to packages used by all users (e.g. the distro's generic kernel).
+DD-WRT's kernel for the device when I stopped using it in 2024 was version 4.19 which stopped receiving support from Linux in December 2024. Security vulnerabilities are discovered continuously in software. It follows that the ability to run a maintained kernel (and to keep it up-to-date with minimal fuss!) in the device separating your network from the rest of the internet are desirable properties.
 
-There are additional significant bugs to consider before you decide to skip
-upgrading. They are discussed in greater detail
-[here](https://github.com/bschnei/ebu-bootloader?tab=readme-ov-file#espressobin-ultra-bootloader).
+### Choosing hardware and a Linux distribution
 
-Upgrading the bootloader requires a USB flash drive and a x64 Linux host.
+In 2023, I decided to get a [Globalscale ESPRESSOBIN Ultra](https://globalscaletechnologies.com/product/espressobin-ultra/) for this project. This line of devices is the result of a [kickstarter project](https://www.kickstarter.com/projects/874883570/marvell-espressobin-board).  The hardware (outside of the WiFi/Bluetooth module) seems fine, but the devices I received came running outdated and unmaintained forks of upstream open source projects (e.g. Linux and U-Boot). Globalscale's forks--lacking years of upstream development--are also very buggy.
 
-#### Set up an x64 Linux host
+It is your basic small-office/home-office router with some nice features like PoE via the WAN port, 4 port switch, and 4 LEDs. It also has a WiFi/Bluetooth module, but it is not very good and requires the use of closed-source drivers.  I recommend separate, dedicated WiFi access point hardware and avoiding this device's WiFi.
 
-While flashing an updated bootloader image to the device only requires another
-computer that can copy the image to a USB flash drive, testing a new image and
-recovering from a bad flash require a Linux host that can run
-[mox-imager](https://gitlab.nic.cz/turris/mox-imager).
+I would also recommend x86 (Intel/AMD) hardware and using the guide linked above. While ARM was less common in 2023 and some argue that is a security advantage, documentation and community resources were also less robust. If you mess up the configuration, it really won't matter if you are using an ARM device or not.
 
-If you do not have a device that runs Linux natively, you can also use a
-virtual machine. Choosing a Debian-based distribution (e.g. Ubuntu Server) will
-typically make it easier to follow most open source project documentation.
+In any case, before purchasing any hardware, it is a good idea to spend time in any forums you can find where you might find users of the same device. Look for community resources hosted by the manufacturer, retailer, or one or more Linux distributions. The distributions in particular are typically going to be your starting point for support. It is fine to choose a device/distribution that does not have a huge community as long as you make those choices knowing what kind of support is available.
 
-#### Build bootloader from source, test, and flash
-Instructions for these steps can be found [here](https://github.com/bschnei/ebu-bootloader).
+The level of support for 64-bit ARM (ARMv8) architecture is highly variable across distributions. I have been using Arch Linux on desktop for a few years, and while stability is not *desktop* Arch's strength, I've had fewer issues using it on headless systems. It can also be very lean which is desirable for security.
+
+Unfortunately the project doesn't officially support the ARM architecture. [Arch Linux ARM](https://archlinuxarm.org/) is an unofficial port that I use, but the project doesn't share the community or infrastructure of Arch Linux. Spend time in the forums and documentation of the distributions you are considering and decide for yourself. Debian (and Ubuntu) are worthy of consideration. In any case, the remainder of this guide should work for any distribution that uses systemd as their system manager.
+
+#### UEFI
+
+If you do decide to use an ARM device, I strongly recommend ensuring it supports [UEFI](https://en.wikipedia.org/wiki/UEFI). For many ARM devices, this will mean the firmware bootloader was compiled with a modern version of U-Boot configured to support [UEFI on U-Boot](https://docs.u-boot.org/en/latest/develop/uefi/uefi.html).
+
+UEFI specifies a standard location to find bootable images on [pecial filesystem partitions](https://en.wikipedia.org/wiki/EFI_system_partition).. This makes it easier for Linux distributions to support the device because it won't require as much maintenance of device-specific packages/documentation which will see far less support relative to packages used by all users (e.g. the distro's generic kernel).
+
+The ESPRESSObin Ultra ships with a firmware bootloader that does not support UEFI. I fixed this (and other issues) and maintain firmware bootloader images [here](https://github.com/bschnei/ebu-bootloader?tab=readme-ov-file#espressobin-ultra-bootloader).
 
 ### Configure U-Boot
 
@@ -87,7 +58,7 @@ recommended to reset the environment variables to their defaults by running:
 ```
 ==> env default -a
 ```
-With a modern version of U-Boot, the only required configuration is to set the
+If U-Boot was compiled with support for [Standard Boot](https://docs.u-boot.org/en/latest/develop/bootstd/index.html), the only required configuration is to set the
 environment variable `bootcmd` to `bootflow scan`:
 
 ```
@@ -95,31 +66,85 @@ environment variable `bootcmd` to `bootflow scan`:
 ==> env save
 ```
 This will tell U-boot to cycle through available boot devices and look for an
-[EFI system partition](https://en.wikipedia.org/wiki/EFI_system_partition).
-When it finds one, it will try to load the EFI image at
+EFI system partition When it finds one, it will try to load the EFI image at
 `EFI/BOOT/BOOTAA64.EFI`.
+
+Full U-Boot environment variables for my device look like this:
+```
+arch=arm
+baudrate=115200
+board=mvebu_armada-37xx
+board_name=mvebu_armada-37xx
+bootcmd=bootflow scan
+bootdelay=2
+cpu=armv8
+eth1addr=00:51:82:11:22:01
+ethact=ethernet@30000
+ethaddr=F0:AD:XX:XX:XX:XX
+ethprime=eth0
+extra_params=pci=pcie_bus_safe
+fdt_addr_r=0x6f00000
+fdt_high=0xffffffffffffffff
+fdt_name=-
+fdtcontroladdr=3faf7910
+fileaddr=6000000
+filesize=790
+gatewayip=10.4.50.254
+hostname=marvell
+image_name=-
+initrd_addr=0xa00000
+initrd_size=0x2000000
+ipaddr=0.0.0.0
+kernel_addr_r=0x7000000
+loadaddr=0x6000000
+netdev=eth0
+netmask=255.255.255.0
+pcb_rev=1.5.0
+pcb_sn=CPE-2325-000121
+ramdisk_addr_r=0xb000000
+ramfs_name=-
+rootpath=/srv/nfs/
+serverip=0.0.0.0
+soc=mvebu
+stderr=serial@12000
+stdin=serial@12000
+stdout=serial@12000
+vendor=Marvell
+```
+
+Most of these variables contain their default values are not actually used for
+anything of importance on my device. U-Boot will simply wait the number of
+seconds in `bootdelay` to allow the user to interrupt booting before running
+the value of `bootcmd` which is `bootflow scan`.
 
 If you chose not to upgrade the bootloader, `bootflow scan` will probably fail
 as being an invalid command and you will have to configure U-Boot according to
 your distribution's device-specific instructions.
 
+BIOS-style booting uses the `booti` command as documented
+[here](https://docs.u-boot.org/en/latest/usage/cmd/booti.html). Its inputs are
+the locations in memory of the kernel, initramfs, and device tree. Your
+`bootcmd` must load those files from a storage device to RAM (via `load`
+command). This is a much more complicated configuration. Arch Linux ARM, for
+example, wants you to set the following environment variables:
+
+```
+kernel_addr=0x2000000
+ramdisk_addr=0x1100000
+fdt_addr=0x1000000
+fdt_high=0xffffffffffffffff
+image_name=/boot/Image
+ramdisk_name=/boot/initramfs-linux.uimg
+fdt_name=/boot/dtbs/marvell/armada-3720-espressobin.dtb
+get_env=if ext4load mmc 0 $loadaddr /boot/uEnv.txt; then env import -t $loadaddr $filesize; if test -n ${uenvcmd}; then run uenvcmd; fi; fi
+get_images=ext4load mmc 0 $kernel_addr $image_name && ext4load mmc 0 $fdt_addr $fdt_name
+get_ramdisk=ext4load mmc 0 $ramdisk_addr $ramdisk_name
+bootargs=console=ttyMV0,115200 earlycon=ar3700_uart,0xd0012000 root=/dev/mmcblk0p1 rw rootwait
+bootcmd=mmc dev 0; run get_env; if run get_images; then if run get_ramdisk; then booti $kernel_addr $ramdisk_addr $fdt_addr; else booti $kernel_addr - $fdt_addr; fi; fi
+```
+
 ### Install a Linux distribution
 
-#### Picking a distribution
-
-The level of support for 64-bit ARM (ARMv8) architecture is highly variable
-across distributions. I have been using Arch Linux on desktop for a few years,
-and while stability is not *desktop* Arch's strength, I've had fewer issues
-using it on headless systems. It can also be very lean which is desirable for
-security.
-
-Unfortunately the project doesn't officially support the ARM architecture.
-[Arch Linux ARM](https://archlinuxarm.org/) is an unofficial port that I use,
-but the project doesn't share the community or infrastructure of Arch Linux.
-Spend time in the forums and documentation of the distributions you are
-considering and decide for yourself. Other users have reported running Debian
-in particular. In any case, the remainder of this guide should work for any
-distribution that uses systemd as their system manager.
 
 #### Create a bootable USB thumb drive (Live USB)
 
