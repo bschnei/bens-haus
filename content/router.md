@@ -28,7 +28,9 @@ In 2023, I decided to get a [Globalscale ESPRESSOBIN Ultra](https://globalscalet
 
 It is your basic small-office/home-office router with some nice features like PoE via the WAN port, 4 port switch, and 4 LEDs. It also has a WiFi/Bluetooth module, but it is not very good and requires the use of closed-source drivers.  I recommend separate, dedicated WiFi access point hardware and avoiding this device's WiFi.
 
-I would also recommend x86 (Intel/AMD) hardware and using the guide linked above. While ARM was less common in 2023 and some argue that is a security advantage, documentation and community resources were also less robust. If you mess up the configuration, it really won't matter if you are using an ARM device or not.
+It is also possible to use the popular Raspberry Pi devices, but will require additional hardware. There is a great guide [here](https://spencersdesk.com/projects/pi-router).
+
+I would also recommend x86 (Intel/AMD) hardware and using the guide linked above. While ARM was less common in 2023 and some argue that is a security advantage, documentation and community resources were also less robust. If you mess up, say, your firewall configuration because your use case is thinly documented, using less popular hardware isn't going to save you.
 
 In any case, before purchasing any hardware, it is a good idea to spend time in any forums you can find where you might find users of the same device. Look for community resources hosted by the manufacturer, retailer, or one or more Linux distributions. The distributions in particular are typically going to be your starting point for support. It is fine to choose a device/distribution that does not have a huge community as long as you make those choices knowing what kind of support is available.
 
@@ -40,34 +42,25 @@ Unfortunately the project doesn't officially support the ARM architecture. [Arch
 
 If you do decide to use an ARM device, I strongly recommend ensuring it supports [UEFI](https://en.wikipedia.org/wiki/UEFI). For many ARM devices, this will mean the firmware bootloader was compiled with a modern version of U-Boot configured to support [UEFI on U-Boot](https://docs.u-boot.org/en/latest/develop/uefi/uefi.html).
 
-UEFI specifies a standard location to find bootable images on [pecial filesystem partitions](https://en.wikipedia.org/wiki/EFI_system_partition).. This makes it easier for Linux distributions to support the device because it won't require as much maintenance of device-specific packages/documentation which will see far less support relative to packages used by all users (e.g. the distro's generic kernel).
+UEFI specifies a standard location to find bootable images on [special filesystem partitions](https://en.wikipedia.org/wiki/EFI_system_partition). This makes it easier for Linux distributions to support the device because it won't require as much maintenance of device-specific packages/documentation which will see far less support relative to packages used by all users (e.g. the distro's generic kernel).
 
 The ESPRESSObin Ultra ships with a firmware bootloader that does not support UEFI. I fixed this (and other issues) and maintain firmware bootloader images [here](https://github.com/bschnei/ebu-bootloader?tab=readme-ov-file#espressobin-ultra-bootloader).
 
 ### Configure U-Boot
 
-U-Boot is configured via the USB serial console which is available on the
-device's Micro-USB port. Connect it to another host with a USB cable/adapter
-and use a terminal emulator like [PuTTY](https://www.putty.org/) or
-[Screen](https://www.gnu.org/software/screen/) to open the serial console.
+U-Boot configuration is highly device-specific. I highly recommend using [Standard Boot](https://docs.u-boot.org/en/latest/develop/bootstd/index.html), but it has to be supported/enabled by your device's U-Boot device configuration file in the U-Boot source tree. That is, it is a compile-time configuration setting. Flashing your device's bootloader firmware may not be an option or something you are comfortable doing, in which cases you'll have to work with what you have.
 
-On this device, U-Boot stores it's [environment
-variables](https://docs.u-boot.org/en/latest/usage/environment.html) in
-dedicated storage that does not get erased when flashing the bootloader. It's
-recommended to reset the environment variables to their defaults by running:
-```
-==> env default -a
-```
-If U-Boot was compiled with support for [Standard Boot](https://docs.u-boot.org/en/latest/develop/bootstd/index.html), the only required configuration is to set the
-environment variable `bootcmd` to `bootflow scan`:
+U-Boot's runtime configuration is stored in [environment variables](https://docs.u-boot.org/en/latest/usage/environment.html) which can be modified from the U-Boot shell with commands like [`env`](https://docs.u-boot.org/en/latest/usage/cmd/env.html).
+
+Device documentation should explain how to access the U-Boot shell (e.g. serial console over USB).
+
+If U-Boot was compiled with support for Standard Boot, the only required configuration is to set the environment variable `bootcmd` to `bootflow scan -b`:
 
 ```
-==> env set bootcmd "bootflow scan"
+==> env set bootcmd "bootflow scan -b"
 ==> env save
 ```
-This will tell U-boot to cycle through available boot devices and look for an
-EFI system partition When it finds one, it will try to load the EFI image at
-`EFI/BOOT/BOOTAA64.EFI`.
+This will tell U-boot to cycle through available boot devices and look for an EFI system partition. When it finds one, it will try to load the EFI image at `EFI/BOOT/BOOTAA64.EFI`.
 
 Full U-Boot environment variables for my device look like this:
 ```
@@ -112,20 +105,9 @@ stdout=serial@12000
 vendor=Marvell
 ```
 
-Most of these variables contain their default values are not actually used for
-anything of importance on my device. U-Boot will simply wait the number of
-seconds in `bootdelay` to allow the user to interrupt booting before running
-the value of `bootcmd` which is `bootflow scan`.
+Most of these variables contain their default values and are not actually used for anything of importance on my device. U-Boot will simply wait the number of seconds in `bootdelay` to allow the user to interrupt booting before running the value of `bootcmd` which is `bootflow scan -b`.
 
-If you chose not to upgrade the bootloader, `bootflow scan` will probably fail
-as being an invalid command and you will have to configure U-Boot according to
-your distribution's device-specific instructions.
-
-BIOS-style booting uses the `booti` command as documented
-[here](https://docs.u-boot.org/en/latest/usage/cmd/booti.html). Its inputs are
-the locations in memory of the kernel, initramfs, and device tree. Your
-`bootcmd` must load those files from a storage device to RAM (via `load`
-command). This is a much more complicated configuration. Arch Linux ARM, for
+BIOS-style booting uses the `booti` command as documented [here](https://docs.u-boot.org/en/latest/usage/cmd/booti.html). Its inputs are the locations in memory of the kernel, initramfs, and device tree. Your `bootcmd` must load those files from a storage device to RAM (via `load` command). This is a much more complicated configuration. Arch Linux ARM, for
 example, wants you to set the following environment variables:
 
 ```
@@ -142,6 +124,9 @@ get_ramdisk=ext4load mmc 0 $ramdisk_addr $ramdisk_name
 bootargs=console=ttyMV0,115200 earlycon=ar3700_uart,0xd0012000 root=/dev/mmcblk0p1 rw rootwait
 bootcmd=mmc dev 0; run get_env; if run get_images; then if run get_ramdisk; then booti $kernel_addr $ramdisk_addr $fdt_addr; else booti $kernel_addr - $fdt_addr; fi; fi
 ```
+
+The obvious drawback is file paths and kernel command line become part of your U-Boot configuration. Any changes to them have to be done via the U-Boot shell. Usually that is going to mean being physically next to the device and accessing it via a serial console. This is a router--I don't want to spend time next to it in the closet. Instead if we instruct U-Boot to chainload an EFI program like `grub` or `systemd-boot`, we can manage multiple kernels and their parameters from userspace (i.e. over ssh).
+
 
 ### Install a Linux distribution
 
