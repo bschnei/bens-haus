@@ -26,27 +26,67 @@ DD-WRT's kernel for the device when I stopped using it in 2024 was version 4.19 
 
 In 2023, I decided to get a [Globalscale ESPRESSOBIN Ultra](https://globalscaletechnologies.com/product/espressobin-ultra/) for this project. This line of devices is the result of a [kickstarter project](https://www.kickstarter.com/projects/874883570/marvell-espressobin-board).  The hardware (outside of the WiFi/Bluetooth module) seems fine, but the devices I received came running outdated and unmaintained forks of upstream open source projects (e.g. Linux and U-Boot). Globalscale's forks--lacking years of upstream development--are also very buggy.
 
-It is your basic small-office/home-office router with some nice features like PoE via the WAN port, 4 port switch, and 4 LEDs. It also has a WiFi/Bluetooth module, but it is not very good and requires the use of closed-source drivers.  I recommend separate, dedicated WiFi access point hardware and avoiding this device's WiFi.
+It is your basic small-office/home-office router with some nice features like PoE via the WAN port, 4 port switch, and 4 LEDs. It has the same CPU as the [Unifi Dream Router 7](https://techspecs.ui.com/unifi/cloud-gateways/udr7?s=us). It also has a WiFi/Bluetooth module, but it is not very good and requires the use of closed-source drivers.  I recommend separate, dedicated WiFi access point hardware and avoiding this device's WiFi.
 
-It is also possible to use the popular Raspberry Pi devices, but will require additional hardware. There is a great guide [here](https://spencersdesk.com/projects/pi-router).
+It is also possible to use the popular Raspberry Pi devices, but that will require additional hardware. There is a great guide [here](https://spencersdesk.com/projects/pi-router). Please read the UEFI section below before choosing a Raspberry Pi.
 
-I would also recommend x86 (Intel/AMD) hardware and using the guide linked above. While ARM was less common in 2023 and some argue that is a security advantage, documentation and community resources were also less robust. If you mess up, say, your firewall configuration because your use case is thinly documented, using less popular hardware isn't going to save you.
+I would also recommend lightweight x86 (Intel/AMD) hardware and using the guide linked above. While ARM was less common in 2023 and some people argue that is a security advantage, documentation and community resources were also less robust. If you mess up, say, your firewall configuration because your use case is thinly documented, using less popular hardware isn't going to save you.
 
-In any case, before purchasing any hardware, it is a good idea to spend time in any forums you can find where you might find users of the same device. Look for community resources hosted by the manufacturer, retailer, or one or more Linux distributions. The distributions in particular are typically going to be your starting point for support. It is fine to choose a device/distribution that does not have a huge community as long as you make those choices knowing what kind of support is available.
+In any case, before purchasing any hardware, it is a good idea to spend time in any forums where you might find users of the same device. Look for community resources hosted by the manufacturer, distributor, or one or more Linux distributions. Your distribution is typically going to be your starting point for support when you run into problems.
 
-The level of support for 64-bit ARM (ARMv8) architecture is highly variable across distributions. I have been using Arch Linux on desktop for a few years, and while stability is not *desktop* Arch's strength, I've had fewer issues using it on headless systems. It can also be very lean which is desirable for security.
+The level of support for 64-bit ARM (ARMv8) architecture is highly variable across distributions. I have been using Arch Linux on desktop for many years. Arch Linux always ships the latest stable kernel--a feature I want, and it's what I'm already comfortable with. They also have high quality, relevant [documentation](https://wiki.archlinux.org/title/Router).
 
-Unfortunately the project doesn't officially support the ARM architecture. [Arch Linux ARM](https://archlinuxarm.org/) is an unofficial port that I use, but the project doesn't share the community or infrastructure of Arch Linux. Spend time in the forums and documentation of the distributions you are considering and decide for yourself. Debian (and Ubuntu) are worthy of consideration. In any case, the remainder of this guide should work for any distribution that uses systemd as their system manager.
+Unfortunately the project doesn't officially support the ARM architecture. [Arch Linux ARM](https://archlinuxarm.org/) is an unofficial port that I used to use, but not all of the device-specific kernels are well maintained--including the [one for the ESPRESSObin](https://github.com/archlinuxarm/PKGBUILDs/blob/master/core/linux-espressobin/PKGBUILD). It also doesn't share the community or infrastructure of Arch Linux. Spend time in the forums and documentation of the distributions you are considering and decide for yourself. Debian (and Ubuntu) are worthy of consideration. In any case, the remainder of the notes should generally applpy to any distribution that uses systemd as their system manager.
 
 #### UEFI
 
-If you do decide to use an ARM device, I strongly recommend ensuring it supports [UEFI](https://en.wikipedia.org/wiki/UEFI). For many ARM devices, this will mean the firmware bootloader was compiled with a modern version of U-Boot configured to support [UEFI on U-Boot](https://docs.u-boot.org/en/latest/develop/uefi/uefi.html).
+If you do decide to use an ARM device, I recommend purchasing one with a bootloader that supports [UEFI](https://en.wikipedia.org/wiki/UEFI). For many ARM devices, this will mean the firmware bootloader was compiled with a modern version of U-Boot configured to support [UEFI on U-Boot](https://docs.u-boot.org/en/latest/develop/uefi/uefi.html). Another UEFI bootloader is [EDK II](https://github.com/tianocore/edk2) which you find on cloud virtual machines.
+
+Unfortunately, the [Raspberry Pi bootloader](https://github.com/raspberrypi/rpi-eeprom) does not (as of late 2025) support UEFI. There are projects to bring [EDK II](https://github.com/NumberOneGit/rpi5-uefi) and U-Boot to the Raspberry Pi 5.
 
 UEFI specifies a standard location to find bootable images on [special filesystem partitions](https://en.wikipedia.org/wiki/EFI_system_partition). This makes it easier for Linux distributions to support the device because it won't require as much maintenance of device-specific packages/documentation which will see far less support relative to packages used by all users (e.g. the distro's generic kernel).
 
 The ESPRESSObin Ultra ships with a firmware bootloader that does not support UEFI. I fixed this (and other issues) and maintain firmware bootloader images [here](https://github.com/bschnei/ebu-bootloader?tab=readme-ov-file#espressobin-ultra-bootloader).
 
-### Configure U-Boot
+
+### Install a Linux distribution
+
+#### Prepare boot media
+
+[Live USB](https://en.wikipedia.org/wiki/Live_USB) is the common approach for devices with USB ports. Follow your distribution's instructions to prepare one. What you are typically doing is flashing a pre-built disk image file (.iso) to a USB flash device. This image usually contains a kernel that should boot all "supported" devices and the basic system utilities needed to prepare storage devices, download and install the distribution to non-removable storage (i.e. eMMC/SATA).
+
+It doesn't actually matter too much which Linux distro you use to image the bootable storage medium. If it boots a GNU/Linux system, it should be possible to use that distribution to bootstrap any other distribution onto another disk or even a partition on the same disk. It is possible, for example, to bootstrap an Arch Linux installation from the recovery shell of a cloud VM. Though, it is not a smooth process and Debian/Ubuntu images are likely a better choice when possible.
+
+[Archboot](https://archboot.com/) uses Arch Linux ARM packages. For this to be an option, your device needs to have mainline Linux support and you may need to modify the kernel commandline parameters to get your device to boot.
+
+In the case of the Raspberry Pi, the factory [Imager](https://github.com/raspberrypi/rpi-imager) can be used to image an SD card. Then from Pi OS, you can repartition the SD card and install Arch in a new partition. It's also possible to image the entire SD card directly from another Linux host in the same fashion as preparing a Live USB.
+
+#### Boot from the live boot medium
+
+Consult your device's bootloader documentation to configure it to boot the live boot medium. In general, UEFI will look for a special disk partition (the EFI System Partition) which is also commonly called the boot partition. When it locates an ESP, it will look for a bootable EFI image. In the case of ARM, it looks for `EFI/BOOT/BOOTAA64.EFI`. This file usually contains a bootloader program like systemd-boot or grub. It can also be a distribution's custom bootloader. It's purpose is to allow users to select a kernel and configure kernel parametersand. It can also chainload another EFI program (like memtest86). Arch Linux ISOs use systemd-boot.
+
+In order to use U-Boot's Standard Boot (`bootflow scan`), a distribution's live
+USB image needs to be UEFI-compatible. If it isn't you will have to configure
+U-Boot to load and boot the kernel/initramfs manually. Again, each distribution
+does this differently so there is no universal configuration. The learning
+curve for U-Boot is also steep and experimenting can only be done at the serial
+console.
+
+Arch Linux ARM's [device instructions and boot
+image](https://archlinuxarm.org/platforms/armv8/marvell/espressobin), for
+example, are not meant to work with Standard Boot and instruct manual U-Boot
+configuration. Note that instructions for the ESPRESSObin also have to be
+modified for the ESPRESSObin Ultra based on different storage and network
+devices.
+
+After you manage to successfully boot from a live USB, you can install your
+distribution. This will include partitioning and formatting block devices. The
+ESPRESSObin Ultra comes with 7.6G of block storage on eMMC. If this is not
+enough for your chosen distribution and packages, it is possible to use the
+device's internal SATA port to add significant internal storage capacity.
+
+
+#### Configure U-Boot
 
 U-Boot configuration is highly device-specific. I highly recommend using [Standard Boot](https://docs.u-boot.org/en/latest/develop/bootstd/index.html), but it has to be supported/enabled by your device's U-Boot device configuration file in the U-Boot source tree. That is, it is a compile-time configuration setting. Flashing your device's bootloader firmware may not be an option or something you are comfortable doing, in which cases you'll have to work with what you have.
 
@@ -127,44 +167,6 @@ bootcmd=mmc dev 0; run get_env; if run get_images; then if run get_ramdisk; then
 
 The obvious drawback is file paths and kernel command line become part of your U-Boot configuration. Any changes to them have to be done via the U-Boot shell. Usually that is going to mean being physically next to the device and accessing it via a serial console. This is a router--I don't want to spend time next to it in the closet. Instead if we instruct U-Boot to chainload an EFI program like `grub` or `systemd-boot`, we can manage multiple kernels and their parameters from userspace (i.e. over ssh).
 
-
-### Install a Linux distribution
-
-
-#### Create a bootable USB thumb drive (Live USB)
-
-Follow your distribution's instructions to prepare a [live
-USB](https://en.wikipedia.org/wiki/Live_USB). What you are typically doing for
-most distributions is flashing a pre-built disk image file (.iso) to a USB
-flash device. This image usually contains a kernel that should boot all
-"supported" devices and the basic system utilities needed to prepare storage
-devices, download and install the distribution to non-removable storage (i.e.
-eMMC/SATA).
-
-While it looks promising, [Archboot](https://archboot.com/) didn't work
-out-of-the-box for me.
-
-#### Boot from the live USB
-
-In order to use U-Boot's Standard Boot (`bootflow scan`), a distribution's live
-USB image needs to be UEFI-compatible. If it isn't you will have to configure
-U-Boot to load and boot the kernel/initramfs manually. Again, each distribution
-does this differently so there is no universal configuration. The learning
-curve for U-Boot is also steep and experimenting can only be done at the serial
-console.
-
-Arch Linux ARM's [device instructions and boot
-image](https://archlinuxarm.org/platforms/armv8/marvell/espressobin), for
-example, are not meant to work with Standard Boot and instruct manual U-Boot
-configuration. Note that instructions for the ESPRESSObin also have to be
-modified for the ESPRESSObin Ultra based on different storage and network
-devices.
-
-After you manage to successfully boot from a live USB, you can install your
-distribution. This will include partitioning and formatting block devices. The
-ESPRESSObin Ultra comes with 7.6G of block storage on eMMC. If this is not
-enough for your chosen distribution and packages, it is possible to use the
-device's internal SATA port to add significant internal storage capacity.
 
 
 ### Configure basic networking and get SSH working
