@@ -36,7 +36,7 @@ In any case, before purchasing any hardware, it is a good idea to spend time in 
 
 The level of support for 64-bit ARM (ARMv8) architecture is highly variable across distributions. I have been using Arch Linux on desktop for many years. Arch Linux always ships the latest stable kernel--a feature I want, and it's what I'm already comfortable with. They also have high quality, relevant [documentation](https://wiki.archlinux.org/title/Router).
 
-Unfortunately the project doesn't officially support the ARM architecture. [Arch Linux ARM](https://archlinuxarm.org/) is an unofficial port that I used to use, but not all of the device-specific kernels are well maintained--including the [one for the ESPRESSObin](https://github.com/archlinuxarm/PKGBUILDs/blob/master/core/linux-espressobin/PKGBUILD). It also doesn't share the community or infrastructure of Arch Linux. Spend time in the forums and documentation of the distributions you are considering and decide for yourself. Debian (and Ubuntu) are worthy of consideration. In any case, the remainder of the notes should generally applpy to any distribution that uses systemd as their system manager.
+Unfortunately the project doesn't officially support the ARM architecture. [Arch Linux ARM](https://archlinuxarm.org/) is an unofficial port that I used to use, but not all of the device-specific kernels are well maintained--including the [one for the ESPRESSObin](https://github.com/archlinuxarm/PKGBUILDs/blob/master/core/linux-espressobin/PKGBUILD). It also doesn't share the community or infrastructure of Arch Linux. Spend time in the forums and documentation of the distributions you are considering and decide for yourself. Debian (and Ubuntu) are worthy of consideration. In any case, the remainder of the notes should generally apply to any distribution that uses systemd as their system manager.
 
 #### UEFI
 
@@ -63,7 +63,7 @@ In the case of the Raspberry Pi, the factory [Imager](https://github.com/raspber
 
 #### Boot from the live boot medium
 
-Consult your device's bootloader documentation to configure it to boot the live boot medium. In general, UEFI will look for a special disk partition (the EFI System Partition) which is also commonly called the boot partition. When it locates an ESP, it will look for a bootable EFI image. In the case of ARM, it looks for `EFI/BOOT/BOOTAA64.EFI`. This file usually contains a bootloader program like systemd-boot or grub. It can also be a distribution's custom bootloader. It's purpose is to allow users to select a kernel and configure kernel parametersand. It can also chainload another EFI program (like memtest86). Arch Linux ISOs use systemd-boot.
+Consult your device's bootloader documentation to configure it to boot the live boot medium. In general, UEFI will look for a special disk partition (the EFI System Partition) which is also commonly called the boot partition. When it locates an ESP, it will look for a bootable EFI image. In the case of ARM, it looks for `EFI/BOOT/BOOTAA64.EFI`. This file usually contains a bootloader program like systemd-boot or grub. It can also be a distribution's custom bootloader. It's purpose is to allow users to select a kernel and configure kernel parameters. It can also chainload another EFI program (like memtest86). Arch Linux ISOs use systemd-boot.
 
 In order to use U-Boot's Standard Boot (`bootflow scan`), a distribution's live
 USB image needs to be UEFI-compatible. If it isn't you will have to configure
