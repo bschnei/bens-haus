@@ -231,11 +231,13 @@ ubiquitous on new x64 hardware, but adoption/support is less common on ARM devic
 I am aware of EDK II and U-Boot supporting UEFI. Note that U-Boot supports a subset
 of the full UEFI specifications.
 
-In any case, most bootloaders work similarly: they loop through attached block devices
-and test for certain conditions to be true. For example, the Raspberry Pi bootloader
-loops through a configurable list of block devices looking for a FAT32 partition containing
-the [config.txt](http://rptl.io/configtxt) file. When it finds one, it loads it and looks for settings that
-tell the bootloader where to find the kernel and the [initramfs](https://wiki.archlinux.org/title/Arch_boot_process#initramfs).
+In any case, most bootloaders work similarly: they loop through attached block
+devices and test for certain conditions to be true. For example, the Raspberry
+Pi bootloader loops through a configurable list of block devices looking for a
+FAT32 partition containing the [config.txt](http://rptl.io/configtxt) file.
+When it finds one, it loads it and looks for settings that tell the bootloader
+where to find the kernel and the
+[initramfs](https://wiki.archlinux.org/title/Arch_boot_process#initramfs).
 
 ##### Raspberry Pi
 
@@ -382,19 +384,18 @@ The obvious drawback is file paths and kernel command line become part of your
 U-Boot configuration. Any changes to them have to be done via the U-Boot shell.
 Usually that is going to mean being physically next to the device and accessing
 it via a serial console. This is a router--I don't want to spend time next to it
-in the closet. Instead if we instruct U-Boot to chainload an EFI program like
-`grub` or `systemd-boot`, we can manage multiple kernels and their parameters
-from userspace (i.e. over ssh).
-
+in the closet. Instead if we instruct U-Boot to load an EFI program like `grub`
+or `systemd-boot`, we can manage multiple kernels and their parameters from
+userspace (i.e. over ssh).
 
 ### Configure basic networking and get SSH working
+
 The good news is that systemd is the default system service manager for both
-Debian-based distributions (Ubuntu, Raspbian) and Arch. A recommended first
+Debian-based distributions (PiOS, Ubuntu, Raspbian) and Arch. A recommended first
 goal is to get to a point where you can ssh into your router when its WAN port
-is connected to your existing
-LAN. Until you do so, you will be working on the device via its serial console
-which means it has to be physically near another computer instead of in a closet
-or rack where it ultimately belongs.
+is connected to your existing LAN. Until you do so, you will be working on the
+device via its serial console which means it has to be physically near another
+computer instead of in a closet or rack where it ultimately belongs.
 
 I recommend disabling any firewall for this first step because it will be one
 more thing to troubleshoot when your ssh attempts fail. A sample WAN port
@@ -411,7 +412,7 @@ BindCarrier=end0
 
 The ESPRESSSObin Ultra uses the [Distributed Switch Architecture
 (DSA)](https://docs.kernel.org/networking/dsa/dsa.html). The `end0` interface is
-the "cpu" or "conduit" Ethernet controller. It also need to be configured:
+the "cpu" or "conduit" Ethernet controller. It also needs to be configured:
 
 ```
 [Match]
@@ -442,11 +443,12 @@ applications (like pi-hole) that come with an optional GUI, all system
 management and maintenance will happen over SSH. Now is an excellent time to
 make sure it is working well (e.g. create and use SSH keys).
 
-### Configure a firewall I use nftables so I have a sample configuration file
-that is meant to be used only when the device is ready to be used as a router.
-If you enable this configuration while SSH'd into the device while it's just a
-device on your LAN, your connection will get dropped and you'll have to go back
-to the serial console to fix it.
+### Configure a firewall
+I use nftables so I have a sample configuration file that is meant to be used
+only when the device is ready to be used as a router. If you enable this
+configuration while SSH'd into the device while it's just a device on your LAN,
+your connection will get dropped and you'll have to go back to the serial
+console to fix it.
 
 So the following configuration file can be set at `/etc/nftables.conf`, but do
 not enable the `nftables` service until you are ready to power down the device
@@ -518,7 +520,7 @@ MulticastDNS=yes
 
 Enable (but don't start) nftables so that the firewall will come up on next boot. 
 
-Change the configuration for the WAN port to enable packed forwarding. Sample `wan.network`:
+Change the configuration for the WAN port to enable packet forwarding. Sample `wan.network`:
 
 ```
 [Match]
@@ -545,9 +547,10 @@ addresses, etc.).
 IPV6 can be enabled though I've found some applications on an Android phone
 struggle with ipv6 and would recommend avoiding it for now.
 
-Install and configure unbound so that you will handle your own DNS lookups
-instead of your ISP (or Google) knowing every website you visit.
+Install and configure [unbound](https://nlnetlabs.nl/projects/unbound/about/)
+so that you will handle your own DNS lookups instead of your ISP (or Google)
+knowing every website you visit.
 
-Install and configure pi-hole for network-wide ad-blocking.
+Install and configure [pi-hole](https://pi-hole.net/) for network-wide ad-blocking.
 
 Configure VLANs.
